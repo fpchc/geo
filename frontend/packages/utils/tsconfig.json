@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@frontend/tsconfig/library.json",
+  "compilerOptions": {
+    "types": ["@frontend-core/typings/vue-router"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}

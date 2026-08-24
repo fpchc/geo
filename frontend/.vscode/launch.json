@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "chrome",
+      "name": "管理后台-dev",
+      "request": "launch",
+      "url": "http://localhost:5777",
+      "preLaunchTask": "dev:admin",
+      "webRoot": "${workspaceFolder}/apps/web-admin",
+      "sourceMaps": true,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Local:\\s+(https?://localhost:\\d+)"
+      }
+    },
+    {
+      "type": "chrome",
+      "name": "管理后台-test",
+      "request": "launch",
+      "url": "http://localhost:5777",
+      "preLaunchTask": "test:admin",
+      "webRoot": "${workspaceFolder}/apps/web-admin",
+      "sourceMaps": true,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Local:\\s+(https?://localhost:\\d+)"
+      }
+    }
+  ]
+}

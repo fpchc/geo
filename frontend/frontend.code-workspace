@@ -1,0 +1,176 @@
+{
+  "folders": [
+    {
+      "name": "@frontend/backend-mock",
+      "path": "apps/backend-mock"
+    },
+    {
+      "name": "@frontend/web-admin",
+      "path": "apps/web-admin"
+    },
+    {
+      "name": "@frontend/web-demand",
+      "path": "apps/web-demand"
+    },
+    {
+      "name": "@frontend/web-supply",
+      "path": "apps/web-supply"
+    },
+    {
+      "name": "@frontend/web-naive",
+      "path": "apps/web-naive"
+    },
+    {
+      "name": "@frontend/commitlint-config",
+      "path": "internal/lint-configs/commitlint-config"
+    },
+    {
+      "name": "@frontend/eslint-config",
+      "path": "internal/lint-configs/eslint-config"
+    },
+    {
+      "name": "@frontend/oxfmt-config",
+      "path": "internal/lint-configs/oxfmt-config"
+    },
+    {
+      "name": "@frontend/oxlint-config",
+      "path": "internal/lint-configs/oxlint-config"
+    },
+    {
+      "name": "@frontend/stylelint-config",
+      "path": "internal/lint-configs/stylelint-config"
+    },
+    {
+      "name": "@frontend/node-utils",
+      "path": "internal/node-utils"
+    },
+    {
+      "name": "@frontend/tailwind-config",
+      "path": "internal/tailwind-config"
+    },
+    {
+      "name": "@frontend/tsconfig",
+      "path": "internal/tsconfig"
+    },
+    {
+      "name": "@frontend/vite-config",
+      "path": "internal/vite-config"
+    },
+    {
+      "name": "@frontend-core/design",
+      "path": "packages/@core/base/design"
+    },
+    {
+      "name": "@frontend-core/icons",
+      "path": "packages/@core/base/icons"
+    },
+    {
+      "name": "@frontend-core/shared",
+      "path": "packages/@core/base/shared"
+    },
+    {
+      "name": "@frontend-core/typings",
+      "path": "packages/@core/base/typings"
+    },
+    {
+      "name": "@frontend-core/composables",
+      "path": "packages/@core/composables"
+    },
+    {
+      "name": "@frontend-core/preferences",
+      "path": "packages/@core/preferences"
+    },
+    {
+      "name": "@frontend-core/form-ui",
+      "path": "packages/@core/ui-kit/form-ui"
+    },
+    {
+      "name": "@frontend-core/layout-ui",
+      "path": "packages/@core/ui-kit/layout-ui"
+    },
+    {
+      "name": "@frontend-core/menu-ui",
+      "path": "packages/@core/ui-kit/menu-ui"
+    },
+    {
+      "name": "@frontend-core/popup-ui",
+      "path": "packages/@core/ui-kit/popup-ui"
+    },
+    {
+      "name": "@frontend-core/shadcn-ui",
+      "path": "packages/@core/ui-kit/shadcn-ui"
+    },
+    {
+      "name": "@frontend-core/tabs-ui",
+      "path": "packages/@core/ui-kit/tabs-ui"
+    },
+    {
+      "name": "@frontend/constants",
+      "path": "packages/constants"
+    },
+    {
+      "name": "@frontend/access",
+      "path": "packages/effects/access"
+    },
+    {
+      "name": "@frontend/common-ui",
+      "path": "packages/effects/common-ui"
+    },
+    {
+      "name": "@frontend/hooks",
+      "path": "packages/effects/hooks"
+    },
+    {
+      "name": "@frontend/layouts",
+      "path": "packages/effects/layouts"
+    },
+    {
+      "name": "@frontend/plugins",
+      "path": "packages/effects/plugins"
+    },
+    {
+      "name": "@frontend/request",
+      "path": "packages/effects/request"
+    },
+    {
+      "name": "@frontend/icons",
+      "path": "packages/icons"
+    },
+    {
+      "name": "@frontend/locales",
+      "path": "packages/locales"
+    },
+    {
+      "name": "@frontend/preferences",
+      "path": "packages/preferences"
+    },
+    {
+      "name": "@frontend/stores",
+      "path": "packages/stores"
+    },
+    {
+      "name": "@frontend/styles",
+      "path": "packages/styles"
+    },
+    {
+      "name": "@frontend/types",
+      "path": "packages/types"
+    },
+    {
+      "name": "@frontend/utils",
+      "path": "packages/utils"
+    },
+    {
+      "name": "@frontend/playground",
+      "path": "playground"
+    },
+    {
+      "name": "@frontend/turbo-run",
+      "path": "scripts/turbo-run"
+    },
+    {
+      "name": "@frontend/vsh",
+      "path": "scripts/vsh"
+    }
+  ]
+}
