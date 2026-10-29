@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from app.core.tasks.task_store import TaskStatus
 
 # --------------------------------------------------------------------------- #
 # 智能体（F-01）
@@ -68,6 +71,14 @@ class GenerateAccepted(BaseModel):
     regen_count: int
 
 
+class GenerateTaskOut(BaseModel):
+    """异步生成任务状态（轮询 task_id 的真实返回结构）。"""
+
+    status: TaskStatus
+    result: dict[str, Any] | None
+    error: str | None
+
+
 # --------------------------------------------------------------------------- #
 # 内容 / 版本
 # --------------------------------------------------------------------------- #
@@ -88,6 +99,10 @@ class ContentOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    title: str | None = None
+    created_at: datetime
+    updated_at: datetime
+    username: str | None = None
     agent_id: int | None
     user_id: int
     status: str
@@ -105,6 +120,7 @@ class ContentDetailOut(ContentOut):
 class ContentQuery(BaseModel):
     status: str | None = None
     agent_id: int | None = None
+    keyword: str | None = Field(default=None, max_length=128)
 
 
 # --------------------------------------------------------------------------- #

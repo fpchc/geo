@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from sqlalchemy import asc, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -36,6 +37,7 @@ from app.schemas.content import (
 )
 from app.services.content.prompt_builder import build_generate_prompt
 from app.services.content.setting_service import SettingService
+from app.services.user_service import UserService
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +52,7 @@ class ContentService:
         self.agents = AgentRepository(session)
         self.materials = MaterialRepository(session)
         self.settings_svc = SettingService(session)
+        self.users = UserService(session)
 
     @staticmethod
     def _current_user_id() -> int:
@@ -59,9 +62,18 @@ class ContentService:
         return user.user_id
 
     @staticmethod
-    def _to_out(content: Content) -> ContentOut:
+    def _to_out(
+        content: Content,
+        *,
+        title: str | None = None,
+        username: str | None = None,
+    ) -> ContentOut:
         return ContentOut(
             id=content.id,
+            title=title,
+            created_at=content.created_at,
+            updated_at=content.updated_at,
+            username=username,
             agent_id=content.agent_id,
             user_id=content.user_id,
             status=content.status,
@@ -154,7 +166,14 @@ class ContentService:
             version = await self.versions.get(content.current_version_id)
             if version is not None:
                 current_version = VersionOut.model_validate(version)
-        detail = ContentDetailOut(**self._to_out(content).model_dump())
+        usernames = await self.users.usernames_by_ids([content.user_id])
+        detail = ContentDetailOut(
+            **self._to_out(
+                content,
+                title=current_version.title if current_version is not None else None,
+                username=usernames.get(content.user_id),
+            ).model_dump()
+        )
         detail.current_version = current_version
         return detail
 
@@ -175,7 +194,16 @@ class ContentService:
             raise ConflictException(f"当前状态 {content.status} 不可确认留存")
         content.status = ContentStatus.RETAINED
         await self.session.flush()
-        return self._to_out(content)
+        title: str | None = None
+        if content.current_version_id is not None:
+            titles = await self.versions.titles_by_ids([content.current_version_id])
+            title = titles.get(content.current_version_id)
+        usernames = await self.users.usernames_by_ids([content.user_id])
+        return self._to_out(
+            content,
+            title=title,
+            username=usernames.get(content.user_id),
+        )
 
     async def paginate(
         self,
@@ -184,17 +212,40 @@ class ContentService:
         limit: int,
         status: str | None,
         agent_id: int | None,
-        order_by: Any,
+        keyword: str | None,
+        sort_by: str | None,
+        sort_order: str,
     ) -> tuple[list[ContentOut], int]:
         filters = []
         if status:
             filters.append(Content.status == status)
         if agent_id is not None:
             filters.append(Content.agent_id == agent_id)
-        rows, total = await self.contents.paginate(
-            offset=offset, limit=limit, filters=filters, order_by=order_by
+        order_col: Any
+        if sort_by == "title":
+            order_col = ContentVersion.title
+        else:
+            order_col = getattr(Content, sort_by, Content.id) if sort_by else Content.id
+        order_by = asc(order_col) if sort_order == "asc" else desc(order_col)
+        rows, total = await self.contents.paginate_with_title(
+            offset=offset,
+            limit=limit,
+            filters=filters,
+            keyword=keyword,
+            order_by=order_by,
         )
-        return [self._to_out(c) for c in rows], total
+        version_ids = [c.current_version_id for c in rows if c.current_version_id is not None]
+        titles = await self.versions.titles_by_ids(version_ids)
+        usernames = await self.users.usernames_by_ids([c.user_id for c in rows])
+        items = [
+            self._to_out(
+                c,
+                title=titles.get(c.current_version_id) if c.current_version_id else None,
+                username=usernames.get(c.user_id),
+            )
+            for c in rows
+        ]
+        return items, total
 
 
 async def _run_generation(content_id: int, prompt: str, source: str) -> dict[str, Any]:

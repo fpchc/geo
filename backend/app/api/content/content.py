@@ -5,23 +5,19 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import APIRouter, Depends
-from sqlalchemy import asc, desc
 
 from app.api.dependencies.auth import require_permission
 from app.api.dependencies.services import get_content_service
 from app.core.exceptions import NotFoundException
-from app.core.idempotency import require_idempotency_key
 from app.core.tasks.task_store import get_task
-from app.models.content import Content
 from app.schemas.content import (
     ContentDetailOut,
     ContentOut,
     ContentQuery,
     GenerateAccepted,
     GenerateRequest,
+    GenerateTaskOut,
     VersionOut,
 )
 from app.schemas.pagination import PaginatedResponse, PaginationParams
@@ -43,14 +39,14 @@ async def list_contents(
     page: PaginationParams = Depends(),
     service: ContentService = Depends(get_content_service),
 ) -> BizResponse[PaginatedResponse[ContentOut]]:
-    order_col = getattr(Content, page.sort_by, Content.id) if page.sort_by else Content.id
-    order_by = asc(order_col) if page.sort_order == "asc" else desc(order_col)
     items, total = await service.paginate(
         offset=page.offset,
         limit=page.limit,
         status=query.status,
         agent_id=query.agent_id,
-        order_by=order_by,
+        keyword=query.keyword,
+        sort_by=page.sort_by,
+        sort_order=page.sort_order,
     )
     return BizResponse.ok(PaginatedResponse.build(items, total, page))
 
@@ -93,11 +89,11 @@ async def regenerate_content(
     summary="查询生成任务状态",
     dependencies=[Depends(require_permission("content:content:query"))],
 )
-async def get_generate_task(task_id: str) -> BizResponse[dict[str, Any]]:
+async def get_generate_task(task_id: str) -> BizResponse[GenerateTaskOut]:
     task = await get_task(_TASK_TYPE, task_id)
     if task is None:
         raise NotFoundException("任务不存在或已过期")
-    return BizResponse.ok(task)
+    return BizResponse.ok(GenerateTaskOut.model_validate(task))
 
 
 @router.get(

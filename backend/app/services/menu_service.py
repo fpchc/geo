@@ -1,8 +1,8 @@
 """菜单服务：CRUD + ancestors 维护 + 建树。
 
 ancestors 规则（不含自身，带尾分隔符防 LIKE 误匹配）：
-- 根节点 parent_id=0，ancestors=""。
-- 子节点 ancestors = 父.ancestors + "," + 父.id（父为根时即 "0"）。
+- 根节点 parent_id=0，ancestors="0"（虚拟根 0）。
+- 子节点 ancestors = 父.ancestors + "," + 父.id（二级为 "0,<root_id>"）。
 - 移动节点：重算自身 ancestors，并批量替换所有子孙前缀；禁止移动到自身子树内（防环）。
 建树复用 app.core.hierarchy.build_forest（O(n) 内存建树，查库一次）。
 """
@@ -16,7 +16,7 @@ from app.core.hierarchy import build_forest, forest_to_dict, prune
 from app.core.security import invalidate_menus
 from app.models.rbac import Menu, MenuType
 from app.repositories.menu_repo import MenuRepository
-from app.schemas.menu import MenuCreate, MenuOut, MenuUpdate
+from app.schemas.menu import MenuCreate, MenuOut, MenuTreeNode, MenuUpdate
 
 
 class MenuService:
@@ -137,8 +137,28 @@ class MenuService:
     async def get(self, menu_id: int) -> MenuOut:
         return self._to_out(await self._get_or_404(menu_id))
 
-    async def _build_tree(self, *, include_button: bool) -> list[dict[str, object]]:
+    @staticmethod
+    def _expand_allowed_menu_ids(rows: list[Menu], allowed: set[int]) -> set[int]:
+        """补全被授权菜单的祖先目录，保证导航树不会断链。"""
+        expanded = set(allowed)
+        for row in rows:
+            if row.id not in allowed:
+                continue
+            for raw in row.ancestors.split(","):
+                if raw and raw != "0":
+                    expanded.add(int(raw))
+        return expanded
+
+    async def _build_tree(
+        self,
+        *,
+        include_button: bool,
+        allowed_menu_ids: set[int] | None = None,
+    ) -> list[MenuTreeNode]:
         rows = await self.menus.list_ordered()  # 查库一次
+        if allowed_menu_ids is not None:
+            expanded = self._expand_allowed_menu_ids(rows, allowed_menu_ids)
+            rows = [row for row in rows if row.id in expanded]
         forest = build_forest(
             rows,
             id_of=lambda m: m.id,
@@ -148,15 +168,24 @@ class MenuService:
         )
         if not include_button:
             forest = prune(forest, keep=lambda m: m.type != int(MenuType.BUTTON))
-        return forest_to_dict(
+        nodes = forest_to_dict(
             forest,
             lambda m: self._to_out(m).model_dump(),
         )
+        return [MenuTreeNode.model_validate(node) for node in nodes]
 
-    async def nav_tree(self) -> list[dict[str, object]]:
-        """左侧导航树：剔除按钮节点。"""
-        return await self._build_tree(include_button=False)
+    async def nav_tree(
+        self,
+        *,
+        role_ids: tuple[int, ...],
+        is_superuser: bool,
+    ) -> list[MenuTreeNode]:
+        """左侧导航树：按当前用户角色过滤，并剔除按钮节点。"""
+        allowed = None
+        if not is_superuser:
+            allowed = await self.menus.menu_ids_of_roles(role_ids)
+        return await self._build_tree(include_button=False, allowed_menu_ids=allowed)
 
-    async def full_tree(self) -> list[dict[str, object]]:
+    async def full_tree(self) -> list[MenuTreeNode]:
         """授权树：包含目录/菜单/按钮全量。"""
         return await self._build_tree(include_button=True)

@@ -20,6 +20,7 @@ class CurrentUser:
     user_id: int
     username: str
     is_superuser: bool = False
+    role_ids: tuple[int, ...] = ()
     permission_codes: frozenset[str] = field(default_factory=frozenset)
     # 当前 access token 的 jti，用于 logout 精确吊销该会话
     access_jti: str | None = None

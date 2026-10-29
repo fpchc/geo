@@ -18,15 +18,17 @@ class MenuRepository(BaseRepository[Menu]):
         super().__init__(Menu, session)
 
     async def all_button_perm_codes(self) -> set[str]:
-        """全部按钮节点的 perm_code（超级用户拥有全部）。"""
+        """全部页面菜单与按钮节点的 perm_code（超级用户拥有全部）。"""
         stmt = select(Menu.perm_code).where(
             Menu.type.in_([int(MenuType.BUTTON), int(MenuType.MENU)]),
             Menu.perm_code.is_not(None),
         )
-        return set((await self.session.execute(stmt)).scalars().all())
+        return {
+            code for code in (await self.session.execute(stmt)).scalars().all() if code is not None
+        }
 
     async def perm_codes_of_role(self, role_id: int) -> set[str]:
-        """单个角色经授权菜单聚合出的按钮 perm_code 集合。"""
+        """单个角色经授权菜单聚合出的页面菜单与按钮 perm_code 集合。"""
         stmt = (
             select(Menu.perm_code)
             .join(role_menu, role_menu.c.menu_id == Menu.id)
@@ -37,14 +39,31 @@ class MenuRepository(BaseRepository[Menu]):
             )
             .distinct()
         )
-        return set((await self.session.execute(stmt)).scalars().all())
+        return {
+            code for code in (await self.session.execute(stmt)).scalars().all() if code is not None
+        }
 
     async def role_ids_holding_menus(self, menu_ids: list[int]) -> set[int]:
         """反查持有指定菜单的角色 id（用于菜单变更时精确失效权限缓存）。"""
         if not menu_ids:
             return set()
         stmt = select(role_menu.c.role_id).where(role_menu.c.menu_id.in_(menu_ids)).distinct()
-        return set((await self.session.execute(stmt)).scalars().all())
+        return {
+            role_id
+            for role_id in (await self.session.execute(stmt)).scalars().all()
+            if role_id is not None
+        }
+
+    async def menu_ids_of_roles(self, role_ids: tuple[int, ...]) -> set[int]:
+        """角色集合被授权的菜单 id（含目录、页面、按钮）。"""
+        if not role_ids:
+            return set()
+        stmt = select(role_menu.c.menu_id).where(role_menu.c.role_id.in_(role_ids)).distinct()
+        return {
+            menu_id
+            for menu_id in (await self.session.execute(stmt)).scalars().all()
+            if menu_id is not None
+        }
 
     async def list_ordered(self) -> list[Menu]:
         """全量菜单，按 order_no 升序（建树时 children 天然有序）。"""

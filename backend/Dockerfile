@@ -26,7 +26,8 @@ RUN groupadd --system app && useradd --system --gid app --create-home app
 
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    APP_PORT=7001
 
 WORKDIR /app
 
@@ -37,7 +38,7 @@ COPY --chown=app:app migrations ./migrations
 
 USER app
 
-EXPOSE 8000
+EXPOSE 7001
 
 # 生产以 uvicorn 多 worker 启动；如需多进程可外挂 gunicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port \"${APP_PORT:-7001}\""]

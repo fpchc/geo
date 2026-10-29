@@ -6,25 +6,24 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.db import get_db
 from app.core.config import settings
+from app.schemas.health import HealthOut, ReadinessOut
 
 router = APIRouter(tags=["system:health"])
 
 
 @router.get("/health", summary="存活探针")
-async def health() -> dict[str, str]:
-    return {"status": "ok", "version": settings.app_version}
+async def health() -> HealthOut:
+    return HealthOut(status="ok", version=settings.app_version)
 
 
 @router.get("/health/ready", summary="就绪探针")
-async def health_ready(session: AsyncSession = Depends(get_db)) -> dict[str, Any]:
+async def health_ready(session: AsyncSession = Depends(get_db)) -> ReadinessOut:
     components: dict[str, str] = {}
 
     # DB
@@ -44,4 +43,4 @@ async def health_ready(session: AsyncSession = Depends(get_db)) -> dict[str, Any
         components["redis"] = f"error: {exc}"
 
     overall = "ok" if all(v == "ok" for v in components.values()) else "degraded"
-    return {"status": overall, "components": components}
+    return ReadinessOut(status=overall, components=components)

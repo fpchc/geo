@@ -18,6 +18,12 @@ class UserRepository(BaseRepository[User]):
         stmt = select(User).where(User.id == user_id).options(selectinload(User.roles))
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
+    async def list_by_ids(self, ids: list[int]) -> list[User]:
+        if not ids:
+            return []
+        stmt = select(User).where(User.id.in_(ids))
+        return list((await self.session.execute(stmt)).scalars().all())
+
     async def get_by_username(self, username: str) -> User | None:
         stmt = select(User).where(User.username == username).options(selectinload(User.roles))
         return (await self.session.execute(stmt)).scalar_one_or_none()

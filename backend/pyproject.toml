@@ -24,16 +24,6 @@ dependencies = [
     "python-multipart>=0.0.9",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.2",
-    "pytest-asyncio>=0.23",
-    "ruff>=0.5",
-    "mypy>=1.10",
-    "pre-commit>=3.7",
-    "types-redis>=4.6",
-]
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -62,7 +52,17 @@ select = [
     "TCH",  # flake8-type-checking
     "RUF",  # ruff-specific
 ]
-ignore = ["B008"]  # FastAPI Depends() in defaults is intentional
+ignore = [
+    "B008",   # FastAPI Depends() in defaults is intentional
+    "RUF001", # 中文全角标点在字符串中是有意为之
+    "RUF002", # 中文全角标点在 docstring 中是有意为之
+    "RUF003", # 中文全角标点在注释中是有意为之
+    "TC001",  # type-only first-party import：保留可读性与重导出
+    "TC002",  # type-only third-party import
+    "TC003",  # type-only standard-library import
+    "N818",   # AppException 是项目统一命名，不改为 Error 后缀
+    "UP046",  # Pydantic 泛型暂不迁移到 PEP 695 语法
+]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
@@ -89,7 +89,7 @@ show_error_codes = true
 exclude = ["migrations/", "tests/"]
 
 [[tool.mypy.overrides]]
-module = ["aiomysql.*"]
+module = ["miniopy_async", "miniopy_async.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
@@ -104,5 +104,87 @@ warn_required_dynamic_aliases = true
 
 [dependency-groups]
 dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
     "ruff>=0.15.22",
+    "mypy>=1.10",
+    "pre-commit>=3.7",
+    "types-redis>=4.6",
+    "import-linter>=2.0",
 ]
+
+[tool.importlinter]
+root_package = "app"
+
+[[tool.importlinter.contracts]]
+name = "API must not import repositories, models, or db"
+type = "forbidden"
+allow_indirect_imports = true
+source_modules = ["app.api"]
+forbidden_modules = ["app.repositories", "app.models", "app.db"]
+ignore_imports = [
+    "app.api.dependencies.db -> app.db.session",
+    "app.api.dependencies.services -> app.services.*",
+]
+
+[[tool.importlinter.contracts]]
+name = "Services must not import API"
+type = "forbidden"
+allow_indirect_imports = true
+source_modules = ["app.services"]
+forbidden_modules = ["app.api"]
+ignore_imports = ["app.core.security.security -> app.api.dependencies.auth"]
+
+[[tool.importlinter.contracts]]
+name = "Repositories must not import services or API"
+type = "forbidden"
+allow_indirect_imports = true
+source_modules = ["app.repositories"]
+forbidden_modules = ["app.services", "app.api"]
+
+[[tool.importlinter.contracts]]
+name = "Models must not import services, repositories, or API"
+type = "forbidden"
+allow_indirect_imports = true
+source_modules = ["app.models"]
+forbidden_modules = ["app.services", "app.repositories", "app.api"]
+
+[[tool.importlinter.contracts]]
+name = "Schemas must not import repositories or services"
+type = "forbidden"
+allow_indirect_imports = true
+source_modules = ["app.schemas"]
+forbidden_modules = ["app.repositories", "app.services"]
+
+[[tool.importlinter.contracts]]
+name = "Content domain must not import Identity domain"
+type = "forbidden"
+allow_indirect_imports = true
+source_modules = ["app.services.content", "app.repositories.content_repo", "app.models.content"]
+forbidden_modules = [
+    "app.services.auth_service",
+    "app.services.user_service",
+    "app.services.role_service",
+    "app.services.menu_service",
+    "app.repositories.user_repo",
+    "app.repositories.role_repo",
+    "app.repositories.menu_repo",
+    "app.models.rbac",
+]
+
+[[tool.importlinter.contracts]]
+name = "Identity domain must not import Content domain"
+type = "forbidden"
+allow_indirect_imports = true
+source_modules = [
+    "app.services.auth_service",
+    "app.services.user_service",
+    "app.services.role_service",
+    "app.services.menu_service",
+    "app.repositories.user_repo",
+    "app.repositories.role_repo",
+    "app.repositories.menu_repo",
+    "app.models.rbac",
+]
+forbidden_modules = ["app.services.content", "app.repositories.content_repo", "app.models.content"]
+

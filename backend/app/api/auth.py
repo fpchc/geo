@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.api.dependencies.auth import get_current_user
 from app.api.dependencies.services import get_auth_service
@@ -26,9 +26,11 @@ router = APIRouter(prefix="/auth", tags=["system:auth"])
 @router.post("/login", summary="用户登录")
 async def login(
     body: LoginRequest,
+    request: Request,
     service: AuthService = Depends(get_auth_service),
 ) -> BizResponse[TokenResponse]:
-    tokens = await service.login(body.username, body.password)
+    client_ip = request.client.host if request.client else "unknown"
+    tokens = await service.login(body.username, body.password, client_ip)
     return BizResponse.ok(tokens)
 
 

@@ -60,7 +60,9 @@ def _subtree_menu_ids(root_id: int) -> list[int]:
     root = by_id[root_id]
     self_path = f"{root.ancestors},{root.id}" if root.ancestors else str(root.id)
     ids = [root_id]
-    ids += [m.id for m in rows if m.ancestors == self_path or m.ancestors.startswith(f"{self_path},")]
+    ids += [
+        m.id for m in rows if m.ancestors == self_path or m.ancestors.startswith(f"{self_path},")
+    ]
     return ids
 
 
@@ -78,21 +80,21 @@ ROLES: list[SeedRole] = [
         code="system_admin",
         name="系统管理员",
         description="负责用户、角色、菜单等系统管理。",
-        menu_ids=_subtree_menu_ids(1),
+        menu_ids=[*_subtree_menu_ids(1), 8, 800],
     ),
     SeedRole(
         id=3,
         code="content_ops",
         name="内容运营",
         description="负责内容创作、评分优化、关键词命中等内容生产。",
-        menu_ids=_subtree_menu_ids(2),
+        menu_ids=[*_subtree_menu_ids(2), 8, 800],
     ),
     SeedRole(
         id=4,
         code="content_viewer",
         name="内容访客",
         description="仅可查看内容库与关键词命中记录（只读）。",
-        menu_ids=[2, 12, 220, 222, 13, 231, 233],
+        menu_ids=[2, 8, 12, 210, 212, 800],
     ),
 ]
 

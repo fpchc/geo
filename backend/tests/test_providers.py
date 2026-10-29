@@ -22,7 +22,15 @@ class _FakeProvider:
         self._payload = payload
         self.closed = False
 
-    async def fetch_resource(self, resource_id: str) -> dict[str, Any]:
+    async def request_json(
+        self,
+        method: str,
+        url: str,
+        *,
+        json: Any = None,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        resource_id = url.rsplit("/", 1)[-1]
         return {"id": resource_id, **self._payload}
 
     async def aclose(self) -> None:
@@ -38,7 +46,7 @@ def provider_app() -> FastAPI:
         resource_id: str,
         provider: ExampleProvider = Depends(get_example_provider),
     ) -> dict[str, Any]:
-        return await provider.fetch_resource(resource_id)
+        return await provider.request_json("GET", f"/demo/{resource_id}")
 
     return app
 

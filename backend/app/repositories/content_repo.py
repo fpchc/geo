@@ -6,7 +6,9 @@
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from typing import Any
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.content import (
@@ -33,6 +35,37 @@ class ContentRepository(BaseRepository[Content]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(Content, session)
 
+    async def paginate_with_title(
+        self,
+        *,
+        offset: int,
+        limit: int,
+        filters: list[Any] | None = None,
+        keyword: str | None = None,
+        order_by: Any = None,
+    ) -> tuple[list[Content], int]:
+        """分页查询内容，并按当前版本标题做可选模糊筛选。"""
+        conditions = list(filters or [])
+        join_condition = Content.current_version_id == ContentVersion.id
+        if keyword:
+            conditions.append(ContentVersion.title.ilike(f"%{keyword}%"))
+
+        count_stmt = (
+            select(func.count()).select_from(Content).outerjoin(ContentVersion, join_condition)
+        )
+        if conditions:
+            count_stmt = count_stmt.where(*conditions)
+        total = int((await self.session.execute(count_stmt)).scalar_one())
+
+        stmt = select(Content).outerjoin(ContentVersion, join_condition)
+        if conditions:
+            stmt = stmt.where(*conditions)
+        if order_by is not None:
+            stmt = stmt.order_by(order_by)
+        stmt = stmt.offset(offset).limit(limit)
+        rows = list((await self.session.execute(stmt)).scalars().all())
+        return rows, total
+
 
 class VersionRepository(BaseRepository[ContentVersion]):
     def __init__(self, session: AsyncSession) -> None:
@@ -45,6 +78,17 @@ class VersionRepository(BaseRepository[ContentVersion]):
             .order_by(ContentVersion.id.desc())
         )
         return list((await self.session.execute(stmt)).scalars().all())
+
+    async def titles_by_ids(self, version_ids: list[int]) -> dict[int, str]:
+        if not version_ids:
+            return {}
+        stmt = select(ContentVersion.id, ContentVersion.title).where(
+            ContentVersion.id.in_(version_ids)
+        )
+        result: dict[int, str] = {}
+        for version_id, title in (await self.session.execute(stmt)).all():
+            result[version_id] = title
+        return result
 
 
 class ScoreRepository(BaseRepository[Score]):

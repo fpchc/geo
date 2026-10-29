@@ -1,4 +1,4 @@
-"""从用户 / 角色种子生成 doc/sql/user.sql。
+"""从用户 / 角色种子生成 deploy/sql/user.sql。
 
 运行：python -m scripts.gen_user_sql
 产物为可重复执行的 SQL（先删后插），供手动导入数据库。
@@ -18,15 +18,15 @@ import bcrypt
 
 from scripts.user_seed import ROLES, USERS, SeedRole, SeedUser
 
-OUTPUT = Path("doc/sql/user.sql")
+OUTPUT = Path("deploy/sql/user.sql")
 _BCRYPT_MAX_BYTES = 72
 
 
 def _hash(password: str) -> str:
     """bcrypt 哈希（与 password.py 一致，取前 72 字节）。"""
-    return bcrypt.hashpw(
-        password.encode("utf-8")[:_BCRYPT_MAX_BYTES], bcrypt.gensalt()
-    ).decode("utf-8")
+    return bcrypt.hashpw(password.encode("utf-8")[:_BCRYPT_MAX_BYTES], bcrypt.gensalt()).decode(
+        "utf-8"
+    )
 
 
 def _sql_str(value: str | None) -> str:
@@ -80,17 +80,13 @@ def render() -> str:
     ]
 
     # role_menu 关联
-    role_menu_rows = [
-        f"  ({r.id}, {mid})" for r in ROLES for mid in sorted(set(r.menu_ids))
-    ]
+    role_menu_rows = [f"  ({r.id}, {mid})" for r in ROLES for mid in sorted(set(r.menu_ids))]
     lines.append("INSERT INTO `role_menu` (`role_id`, `menu_id`) VALUES")
     lines.append(",\n".join(role_menu_rows) + ";")
     lines.append("")
 
     # user_role 关联
-    user_role_rows = [
-        f"  ({u.id}, {rid})" for u in USERS for rid in sorted(set(u.role_ids))
-    ]
+    user_role_rows = [f"  ({u.id}, {rid})" for u in USERS for rid in sorted(set(u.role_ids))]
     lines.append("INSERT INTO `user_role` (`user_id`, `role_id`) VALUES")
     lines.append(",\n".join(user_role_rows) + ";")
     lines.append("")

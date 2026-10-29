@@ -6,7 +6,7 @@ from sqlalchemy import asc, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictException, NotFoundException
-from app.core.security import hash_password
+from app.core.security import hash_password, session_store
 from app.models.rbac import User
 from app.repositories.user_repo import UserRepository
 from app.schemas.pagination import PaginationParams
@@ -30,6 +30,10 @@ class UserService:
             is_superuser=user.is_superuser,
             role_ids=[r.id for r in user.roles],
         )
+
+    async def usernames_by_ids(self, ids: list[int]) -> dict[int, str]:
+        users = await self.users.list_by_ids(ids)
+        return {user.id: user.username for user in users}
 
     async def _get_or_404(self, user_id: int) -> User:
         user = await self.users.get_with_roles(user_id)
@@ -57,13 +61,17 @@ class UserService:
     async def update(self, user_id: int, data: UserUpdate) -> UserOut:
         user = await self._get_or_404(user_id)
         payload = data.model_dump(exclude_unset=True)
+        was_active = user.is_active
         for field, value in payload.items():
             setattr(user, field, value)
         await self.session.flush()
+        if was_active and not user.is_active:
+            await session_store.revoke_all_sessions(user_id)
         return self._to_out(user)
 
     async def delete(self, user_id: int) -> None:
         user = await self._get_or_404(user_id)
+        await session_store.revoke_all_sessions(user_id)
         await self.users.delete(user)
 
     async def get(self, user_id: int) -> UserOut:

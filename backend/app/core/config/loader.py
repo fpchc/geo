@@ -42,4 +42,4 @@ def initialize_middlewares(app: FastAPI) -> None:
     # 实际执行链路：RequestMiddleware → IdempotencyMiddleware → ExceptionMiddleware → Handler
     middlewares = [ExceptionMiddleware, IdempotencyMiddleware, RequestMiddleware]
     for middleware in middlewares:
-        app.add_middleware(middleware)
+        app.add_middleware(middleware)  # type: ignore[arg-type]  # Starlette 动态校验中间件签名

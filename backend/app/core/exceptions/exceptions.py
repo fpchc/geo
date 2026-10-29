@@ -24,6 +24,8 @@ class ErrorCode(IntEnum):
     PERMISSION_DENIED = 20002
     TOKEN_EXPIRED = 20003
     TOKEN_INVALID = 20004
+    LOGIN_RATE_LIMITED = 20005
+    LOGIN_LOCKED = 20006
     # 幂等
     IDEMPOTENT_IN_PROGRESS = 30001
     IDEMPOTENT_KEY_CONFLICT = 30002
@@ -50,9 +52,11 @@ class AppException(Exception):
         data: Any = None,
         error_code: ErrorCode | None = None,
         http_status: int | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         self.message = message or self.message
         self.data = data
+        self.headers = headers
         if error_code is not None:
             self.error_code = error_code
         if http_status is not None:
@@ -92,6 +96,28 @@ class TokenExpiredException(UnauthorizedException):
 class TokenInvalidException(UnauthorizedException):
     error_code = ErrorCode.TOKEN_INVALID
     message = "令牌无效"
+
+
+class LoginRateLimitedException(AppException):
+    """登录请求超过限流阈值。"""
+
+    http_status = 429
+    error_code = ErrorCode.LOGIN_RATE_LIMITED
+    message = "尝试次数过多，请稍后再试"
+
+    def __init__(self, *, retry_after: int) -> None:
+        super().__init__(headers={"Retry-After": str(max(retry_after, 1))})
+
+
+class LoginLockedException(AppException):
+    """用户名连续失败达到阈值，进入锁定。"""
+
+    http_status = 429
+    error_code = ErrorCode.LOGIN_LOCKED
+    message = "尝试次数过多，请稍后再试"
+
+    def __init__(self, *, retry_after: int) -> None:
+        super().__init__(headers={"Retry-After": str(max(retry_after, 1))})
 
 
 class PermissionDeniedException(AppException):

@@ -15,12 +15,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.core.config import (
-    initialize_extensions,
-    initialize_middlewares,
-    settings,
-    setup_openapi,
-)
+from app.core.config import settings, setup_openapi
+from app.core.config.loader import initialize_extensions, initialize_middlewares
 
 logger = logging.getLogger(__name__)
 

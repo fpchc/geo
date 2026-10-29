@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import io
-from typing import Any
+from typing import Any, cast
 
 from app.core.config import settings
 from app.core.exceptions import StorageException
@@ -56,7 +56,7 @@ class MinioStorageProvider:
         try:
             response = await client.get_object(self._bucket, key)
             try:
-                return await response.read()
+                return cast("bytes", await response.read())
             finally:
                 response.close()
                 await response.release()
@@ -70,10 +70,13 @@ class MinioStorageProvider:
         client = self._client()
         seconds = expires if expires is not None else self._presign_expire_seconds
         try:
-            return await client.presigned_get_object(
-                self._bucket,
-                key,
-                expires=timedelta(seconds=seconds),
+            return cast(
+                "str",
+                await client.presigned_get_object(
+                    self._bucket,
+                    key,
+                    expires=timedelta(seconds=seconds),
+                ),
             )
         except _minio_error() as exc:
             raise StorageException(f"生成预签名 URL 失败：{exc}") from exc

@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable, Iterable, Iterator
-from typing import Literal, Protocol
+from typing import Any, Literal, Protocol
 
 type OrphanStrategy = Literal["root", "skip", "error"]
 
@@ -98,7 +98,7 @@ def build_forest[T, K: Hashable](
     id_of: Callable[[T], K],
     parent_id_of: Callable[[T], K],
     root_parent_id: K,
-    sort_key: Callable[[T], object] | None = None,
+    sort_key: Callable[[T], Any] | None = None,
     on_orphan: OrphanStrategy = "root",
 ) -> list[HierarchyNode[T]]:
     """将扁平列表构建为层级森林（可能有多个根）。

@@ -9,6 +9,7 @@ from enum import StrEnum
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 type ProviderBackend = Literal["http", "mock"]
@@ -20,6 +21,11 @@ class Environment(StrEnum):
     DEV = "dev"
     STAGING = "staging"
     PROD = "prod"
+
+
+class LogFormat(StrEnum):
+    JSON = "json"
+    TEXT = "text"
 
 
 class Settings(BaseSettings):
@@ -37,6 +43,8 @@ class Settings(BaseSettings):
     environment: Environment = Environment.DEV
     debug: bool = True
     api_v1_prefix: str = "/api/v1"
+    app_port: int = 7001
+    dashboard_timezone: str = 'Asia/Shanghai'
 
     # ---- OpenAPI / Swagger 文档 ----
     docs_enabled: bool = True  # 生产环境应置为 false
@@ -55,6 +63,17 @@ class Settings(BaseSettings):
     # redis 会话白名单 key 前缀
     session_key_prefix: str = "session"
     refresh_key_prefix: str = "refresh"
+    user_sessions_key_prefix: str = "user_sessions"
+    # 登录限流（按 IP，固定窗口）
+    auth_login_rate_limit_per_minute: int = 10
+    auth_login_rate_window_seconds: int = 60
+    login_rate_key_prefix: str = "login:rate:ip"
+    # 登录失败锁定（按用户名）
+    auth_login_failure_threshold: int = 5
+    auth_login_failure_window_minutes: int = 15
+    auth_login_lockout_minutes: int = 15
+    login_failure_key_prefix: str = "login:fail:user"
+    login_lock_key_prefix: str = "login:lock:user"
     # 权限码缓存（按角色）：key 前缀 + TTL 兜底（秒）；超级用户全量按钮码单独缓存
     perm_cache_role_prefix: str = "perm:role"
     perm_cache_super_key: str = "perm:super"
@@ -79,6 +98,7 @@ class Settings(BaseSettings):
 
     # ---- Logging ----
     log_level: str = "INFO"
+    log_format: LogFormat = LogFormat.JSON
     log_dir: str = "logs"
     log_file: str = "app.log"
     log_max_bytes: int = 10 * 1024 * 1024
@@ -133,6 +153,14 @@ class Settings(BaseSettings):
     crawler_timeout_seconds: float = 30.0
     # 反爬限速：每秒最大请求数
     crawler_rate_limit_per_second: float = 1.0
+
+    @field_validator("log_format", mode="before")
+    @classmethod
+    def _normalize_log_format(cls, value: object) -> object:
+        """兼容常见写法 `txt`：LOG_FORMAT=txt 等价于 text。"""
+        if isinstance(value, str) and value.strip().lower() == "txt":
+            return LogFormat.TEXT.value
+        return value
 
     @property
     def is_prod(self) -> bool:

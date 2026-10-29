@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import logging
-
 from typing import TYPE_CHECKING
 
 from fastapi import FastAPI
@@ -16,7 +15,7 @@ from fastapi import FastAPI
 from app.core.config import settings
 
 if TYPE_CHECKING:
-    from miniopy_async import Minio
+    from miniopy_async import Minio  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,7 @@ def get_minio() -> Minio:
     """返回全局 MinIO 客户端；未初始化则惰性创建。"""
     global _minio_client
     if _minio_client is None:
-        from miniopy_async import Minio
+        from miniopy_async import Minio  # type: ignore[attr-defined]
 
         _minio_client = Minio(
             endpoint=settings.minio_endpoint,

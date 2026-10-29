@@ -27,30 +27,32 @@ logger = logging.getLogger(__name__)
 
 
 async def audit_permission_codes(session: AsyncSession) -> None:
-    """校验代码声明的权限码与菜单按钮 perm_code 的一致性（只读，不写库）。"""
+    """校验代码声明的权限码与菜单节点（页面菜单/按钮）perm_code 的一致性（只读，不写库）。"""
     declared: set[str] = set(declared_permission_codes)
 
     stmt = select(Menu.perm_code).where(
-        Menu.type == int(MenuType.BUTTON),
+        Menu.type.in_([int(MenuType.MENU), int(MenuType.BUTTON)]),
         Menu.perm_code.is_not(None),
     )
-    menu_codes: set[str] = set((await session.execute(stmt)).scalars().all())
+    menu_codes: set[str] = {
+        code for code in (await session.execute(stmt)).scalars().all() if code is not None
+    }
 
     missing_in_menu = sorted(declared - menu_codes)
     orphan_in_menu = sorted(menu_codes - declared)
 
     if missing_in_menu:
         logger.warning(
-            "权限码已在接口声明但菜单按钮未覆盖（这些接口暂无角色可授权，请补 menu_seed）：%s",
+            "权限码已在接口声明但菜单节点未覆盖（这些接口暂无角色可授权，请补 menu_seed）：%s",
             missing_in_menu,
         )
     if orphan_in_menu:
         logger.warning(
-            "菜单按钮 perm_code 无对应接口声明（僵尸权限码，建议从 menu_seed 移除）：%s",
+            "菜单节点 perm_code 无对应接口声明（僵尸权限码，建议从 menu_seed 移除）：%s",
             orphan_in_menu,
         )
     logger.info(
-        "permission audit done: declared=%d menu_buttons=%d missing_in_menu=%d orphan_in_menu=%d",
+        "permission audit done: declared=%d menu_nodes=%d missing_in_menu=%d orphan_in_menu=%d",
         len(declared),
         len(menu_codes),
         len(missing_in_menu),

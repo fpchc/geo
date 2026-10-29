@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import APIRouter, Depends
 
-from app.api.dependencies.auth import require_permission
+from app.api.dependencies.auth import get_current_user, require_permission
 from app.api.dependencies.services import get_menu_service
-from app.schemas.menu import MenuCreate, MenuOut, MenuUpdate
+from app.core.context import CurrentUser
+from app.schemas.menu import MenuCreate, MenuOut, MenuTreeNode, MenuUpdate
 from app.schemas.response import BizResponse
 from app.services.menu_service import MenuService
 
@@ -17,13 +16,16 @@ router = APIRouter(prefix="/menus", tags=["system:menu"])
 
 @router.get(
     "/tree",
-    summary="导航菜单树（剔除按钮）",
-    dependencies=[Depends(require_permission("system:menu:list"))],
+    summary="当前用户导航菜单树（剔除按钮）",
+    dependencies=[Depends(get_current_user)],
 )
 async def nav_tree(
+    current: CurrentUser = Depends(get_current_user),
     service: MenuService = Depends(get_menu_service),
-) -> BizResponse[list[dict[str, Any]]]:
-    return BizResponse.ok(await service.nav_tree())
+) -> BizResponse[list[MenuTreeNode]]:
+    return BizResponse.ok(
+        await service.nav_tree(role_ids=current.role_ids, is_superuser=current.is_superuser)
+    )
 
 
 @router.get(
@@ -33,7 +35,7 @@ async def nav_tree(
 )
 async def full_tree(
     service: MenuService = Depends(get_menu_service),
-) -> BizResponse[list[dict[str, Any]]]:
+) -> BizResponse[list[MenuTreeNode]]:
     return BizResponse.ok(await service.full_tree())
 
 

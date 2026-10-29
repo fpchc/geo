@@ -1,6 +1,6 @@
 """菜单种子数据：单一数据源。
 
-供 gen_menu_sql.py（生成 doc/sql/menu.sql）与 Alembic data migration 共同引用。
+供 gen_menu_sql.py 生成 deploy/sql/menu.sql，由用户幂等导入目标库。
 用嵌套结构声明整棵菜单树；ancestors 由 flatten() 依据层级自动推导，
 无需手写，避免出错。ID 显式指定以保证生成结果稳定、可重复导入。
 """
@@ -40,6 +40,23 @@ class FlatMenu:
 # 菜单树定义：系统管理 > 用户/角色/菜单管理 + 各自增删改查按钮
 MENU_TREE: list[SeedMenu] = [
     SeedMenu(
+        id=8,
+        name="工作台",
+        type=MenuType.MENU,
+        path="/dashboard",
+        icon="layout-dashboard",
+        order_no=0,
+        children=[
+            SeedMenu(
+                id=800,
+                name="工作台查询",
+                type=MenuType.BUTTON,
+                perm_code="content:dashboard:read",
+                order_no=1,
+            ),
+        ],
+    ),
+    SeedMenu(
         id=1,
         name="系统管理",
         type=MenuType.DIRECTORY,
@@ -51,7 +68,7 @@ MENU_TREE: list[SeedMenu] = [
                 id=5,
                 name="用户管理",
                 type=MenuType.MENU,
-                path="/system/user",
+                path="/system/users",
                 perm_code="system:user:list",
                 order_no=1,
                 children=[
@@ -103,7 +120,7 @@ MENU_TREE: list[SeedMenu] = [
                 id=6,
                 name="角色管理",
                 type=MenuType.MENU,
-                path="/system/role",
+                path="/system/roles",
                 perm_code="system:role:list",
                 order_no=2,
                 children=[
@@ -148,7 +165,7 @@ MENU_TREE: list[SeedMenu] = [
                 id=7,
                 name="菜单管理",
                 type=MenuType.MENU,
-                path="/system/menu",
+                path="/system/menus",
                 perm_code="system:menu:list",
                 order_no=3,
                 children=[
@@ -241,7 +258,7 @@ MENU_TREE: list[SeedMenu] = [
                 id=12,
                 name="内容库",
                 type=MenuType.MENU,
-                path="/content/manage",
+                path="/content/library",
                 perm_code="content:content:list",
                 order_no=2,
                 children=[
@@ -272,7 +289,7 @@ MENU_TREE: list[SeedMenu] = [
                 id=13,
                 name="内容配置",
                 type=MenuType.MENU,
-                path="/content/setting",
+                path="/content/settings",
                 perm_code="content:setting:query",
                 order_no=3,
                 children=[

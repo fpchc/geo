@@ -1,157 +1,45 @@
-<div align="center">
-  <a href="https://github.com/anncwb/vue-vben-admin">
-    <img alt="VbenAdmin Logo" width="215" src="">
-  </a>
-  <br>
-  <br>
+# web-admin
 
-[![license](https://img.shields.io/github/license/anncwb/vue-vben-admin.svg)](LICENSE)
+GEO 内容运营后台，Next.js 16 单体应用。规划与决策见 `docs/`。
 
-  <h1>Vue Vben Admin</h1>
-</div>
-
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=vbenjs_vue-vben-admin&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=vbenjs_vue-vben-admin) [![codeql](https://github.com/vbenjs/vue-vben-admin/actions/workflows/codeql.yml/badge.svg)](https://github.com/vbenjs/vue-vben-admin/actions/workflows/codeql.yml) [![build](https://github.com/vbenjs/vue-vben-admin/actions/workflows/build.yml/badge.svg)](https://github.com/vbenjs/vue-vben-admin/actions/workflows/build.yml) [![ci](https://github.com/vbenjs/vue-vben-admin/actions/workflows/ci.yml/badge.svg)](https://github.com/vbenjs/vue-vben-admin/actions/workflows/ci.yml) [![deploy](https://github.com/vbenjs/vue-vben-admin/actions/workflows/deploy.yml/badge.svg)](https://github.com/vbenjs/vue-vben-admin/actions/workflows/deploy.yml)
-
-**English** | [中文](./README.zh-CN.md) | [日本語](./README.ja-JP.md)
-
-## Introduction
-
-Vue Vben Admin is a free and open source middle and back-end template. Using the latest `vue3`, `vite`, `TypeScript` and other mainstream technology development, the out-of-the-box middle and back-end front-end solutions can also be used for learning reference.
-
-## Upgrade Notice
-
-This is the latest version, 5.0, and it is not compatible with previous versions. If you are starting a new project, it is recommended to use the latest version. If you wish to view the old version, please use the [v2 branch](https://github.com/vbenjs/vue-vben-admin/tree/v2).
-
-## Features
-
-- **Latest Technology Stack**: Developed with cutting-edge front-end technologies like Vue 3 and Vite
-- **TypeScript**: A language for application-scale JavaScript
-- **Themes**: Multiple theme colors available with customizable options
-- **Internationalization**: Comprehensive built-in internationalization support
-- **Permissions**: Built-in solution for dynamic route-based permission generation
-
-## Preview
-
-- [Vben Admin](https://vben.pro/) - Full version Chinese site
-
-Test Account: vben/123456
-
-<div align="center">
-  <img alt="VbenAdmin Logo" width="100%" src="https://anncwb.github.io/anncwb/images/preview1.png">
-  <img alt="VbenAdmin Logo" width="100%" src="https://anncwb.github.io/anncwb/images/preview2.png">
-  <img alt="VbenAdmin Logo" width="100%" src="https://anncwb.github.io/anncwb/images/preview3.png">
-</div>
-
-### Use Gitpod
-
-Open the project in Gitpod (free online dev environment for GitHub) and start coding immediately.
-
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/vbenjs/vue-vben-admin)
-
-## Documentation
-
-[Document](https://doc.vben.pro/)
-
-## Install and Use
-
-1. Get the project code
+## 开发
 
 ```bash
-git clone https://github.com/vbenjs/vue-vben-admin.git
-```
-
-2. Install dependencies
-
-```bash
-cd vue-vben-admin
-npm i -g corepack
 pnpm install
-```
-
-3. Run
-
-```bash
+cp .env.example .env.local
 pnpm dev
 ```
 
-4. Build
+开发服务器监听 `http://127.0.0.1:7002`。默认后端地址为 `http://127.0.0.1:7001/api/v1`，可通过 `API_BASE_URL` 覆盖。
 
-```bash
-pnpm build
-```
+## 脚本
 
-## Change Log
+- `pnpm dev`：启动开发服务器（端口 7002）
+- `pnpm build` / `pnpm start`：生产构建与启动（standalone，端口 7002）
+- `pnpm lint`：Biome + ESLint
+- `pnpm typecheck`：TypeScript strict 检查
+- `pnpm test`：Vitest + React Testing Library + MSW
+- `pnpm test:e2e`：Playwright，启动真实 Next.js 应用与 stub backend
+- `pnpm openapi:generate`：从 `openapi.json` 生成 API 类型
+- `pnpm openapi:check`：校验生成类型是否与契约一致
 
-[CHANGELOG](https://github.com/vbenjs/vue-vben-admin/releases)
+## 测试缝
 
-## How to Contribute
+所有数据访问经过同一个 typed client；测试统一在 HTTP 边界替换后端：
 
-You are very welcome to join! [Raise an issue](https://github.com/anncwb/vue-vben-admin/issues/new/choose) or submit a Pull Request.
+- Playwright：真实 Next.js 应用 + `tests/e2e/stub-backend.mjs`
+- Vitest + RTL：组件渲染 + MSW handlers
+- 纯逻辑：Vitest
 
-**Pull Request Process:**
+## 契约
 
-1. Fork the code
-2. Create your branch: `git checkout -b feat/xxxx`
-3. Submit your changes: `git commit -am 'feat(function): add xxxxx'`
-4. Push your branch: `git push origin feat/xxxx`
-5. Submit `pull request`
+`openapi.json` 是后端契约快照，`src/lib/api/generated.ts` 由 `openapi-typescript` 生成。后端契约变更后先更新快照，再重新生成类型。
 
-## Git Contribution Submission Specification
+## 可观测性与安全
 
-Reference [vue](https://github.com/vuejs/vue/blob/dev/.github/COMMIT_CONVENTION.md) specification ([Angular](https://github.com/conventional-changelog/conventional-changelog/tree/master/packages/conventional-changelog-angular))
-
-- `feat` Add new features
-- `fix` Fix the problem/BUG
-- `style` The code style is related and does not affect the running result
-- `perf` Optimization/performance improvement
-- `refactor` Refactor
-- `revert` Undo edit
-- `test` Test related
-- `docs` Documentation/notes
-- `chore` Dependency update/scaffolding configuration modification etc.
-- `ci` Continuous integration
-- `types` Type definition file changes
-
-## Browser Support
-
-Tailwind CSS v4.0 is designed for Safari 16.4+, Chrome 111+, and Firefox 128+
-
-Support modern browsers, not IE
-
-| [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="Edge" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png" alt="Firefox" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Firefox | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Chrome | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png" alt="Safari" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Safari |
-| :-: | :-: | :-: | :-: |
-| last 2 versions | last 2 versions | last 2 versions | last 2 versions |
-
-## Maintainer
-
-[@Vben](https://github.com/anncwb)
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=vbenjs/vue-vben-admin&type=Date)](https://star-history.com/#vbenjs/vue-vben-admin&Date)
-
-## Donate
-
-If you think this project is helpful to you, you can help the author buy a cup of coffee to show your support!
-
-![donate](https://unpkg.com/@vbenjs/static-source@0.1.7/source/sponsor.png)
-
-<a style="display: block;width: 100px;height: 50px;line-height: 50px; color: #fff;text-align: center; background: #408aee;border-radius: 4px;" href="https://www.paypal.com/paypalme/cvvben">Paypal Me</a>
-
-## Contributors
-
-<a href="https://openomy.app/github/vbenjs/vue-vben-admin" target="_blank" style="display: block; width: 100%;" align="center">
-  <img src="https://openomy.app/svg?repo=vbenjs/vue-vben-admin&chart=bubble&latestMonth=3" target="_blank" alt="Contribution Leaderboard" style="display: block; width: 100%;" />
- </a>
-
-<a href="https://github.com/vbenjs/vue-vben-admin/graphs/contributors">
-  <img alt="Contributors" src="https://contrib.rocks/image?repo=vbenjs/vue-vben-admin" />
-</a>
-
-## Discord
-
-- [Github Discussions](https://github.com/anncwb/vue-vben-admin/discussions)
-
-## License
-
-[MIT © Vben-2020](./LICENSE)
+- 服务端 Sentry 使用 `SENTRY_DSN`；浏览器使用 `NEXT_PUBLIC_SENTRY_DSN`（DSN 不是密钥）。
+- Sourcemap 上传需要 `SENTRY_AUTH_TOKEN`、`SENTRY_ORG`、`SENTRY_PROJECT`；未配置时构建跳过上传。
+- 安全头在 `next.config.ts` 中统一下发；开发环境 CSP 允许 `unsafe-eval` 与 HMR websocket，生产环境收紧。
+- `pnpm check:client-secrets` 在构建后扫描客户端 bundle，禁止出现 token、API base URL 等敏感字符串。
+- Sentry 事件在 `beforeSend` 中脱敏：authorization/cookie/password/token/prompt/material 字段统一替换为 `[Filtered]`。
+- Web Vitals 通过 `/api/monitoring/vitals` 上报，只记录指标名、数值与评级，不记录页面内容。

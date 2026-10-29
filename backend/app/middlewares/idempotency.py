@@ -96,7 +96,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
     ) -> None:
         snapshot = {
             "status_code": response.status_code,
-            "headers": {k: v for k, v in response.headers.items()},
+            "headers": dict(response.headers.items()),
             "body": body.decode("utf-8", errors="replace"),
         }
         await redis.set(cache_key, json.dumps(snapshot, ensure_ascii=False), ex=ttl)

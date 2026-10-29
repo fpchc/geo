@@ -1,7 +1,7 @@
 """认证服务：登录 / 刷新 / 登出。
 
 token 结合 redis 白名单：
-- login：校验密码 → 签 access+refresh(带 jti) → 写 redis 会话。
+- login：登录守卫限流 → 校验密码 → 签 access+refresh(带 jti) → 写 redis 会话。
 - refresh：校验 refresh + redis 存在 → 发新 access → 轮换 refresh。
 - logout：删除 redis 会话，access 即时失效。
 """
@@ -11,8 +11,13 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.exceptions import UnauthorizedException
+from app.core.exceptions import (
+    LoginLockedException,
+    LoginRateLimitedException,
+    UnauthorizedException,
+)
 from app.core.security import (
+    LoginGuard,
     create_access_token,
     create_refresh_token,
     decode_token,
@@ -24,17 +29,27 @@ from app.schemas.auth import TokenResponse
 
 
 class AuthService:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession, guard: LoginGuard) -> None:
         self.session = session
         self.users = UserRepository(session)
+        self.guard = guard
 
-    async def login(self, username: str, password: str) -> TokenResponse:
+    async def login(self, username: str, password: str, client_ip: str) -> TokenResponse:
+        decision = await self.guard.check(client_ip, username)
+        if not decision.allowed:
+            if decision.reason == "locked":
+                raise LoginLockedException(retry_after=decision.retry_after)
+            raise LoginRateLimitedException(retry_after=decision.retry_after)
+
         user = await self.users.get_by_username(username)
         if user is None or not user.is_active:
+            await self.guard.record_failure(client_ip, username)
             raise UnauthorizedException("用户名或密码错误")
         if not await verify_password(password, user.hashed_password):
+            await self.guard.record_failure(client_ip, username)
             raise UnauthorizedException("用户名或密码错误")
 
+        await self.guard.reset(username)
         access_token, access_jti = create_access_token(user.id)
         refresh_token, refresh_jti = create_refresh_token(user.id)
         await session_store.create_session(

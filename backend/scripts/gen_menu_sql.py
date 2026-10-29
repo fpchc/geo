@@ -1,4 +1,4 @@
-"""从菜单种子生成 doc/sql/menu.sql。
+"""从菜单种子生成 deploy/sql/menu.sql。
 
 运行：python -m scripts.gen_menu_sql
 产物为可重复执行的 INSERT（含 ancestors），供手动导入数据库。
@@ -10,7 +10,7 @@ from pathlib import Path
 
 from scripts.menu_seed import FlatMenu, flatten
 
-OUTPUT = Path("doc/sql/menu.sql")
+OUTPUT = Path("deploy/sql/menu.sql")
 
 
 def _sql_str(value: str | None) -> str:

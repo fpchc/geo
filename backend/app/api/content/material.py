@@ -9,7 +9,6 @@ from fastapi import APIRouter, Depends, File, UploadFile
 
 from app.api.dependencies.auth import require_permission
 from app.api.dependencies.services import get_material_service
-from app.core.idempotency import require_idempotency_key
 from app.schemas.content import MaterialOut
 from app.schemas.response import BizResponse
 from app.services.content.material_service import MaterialService

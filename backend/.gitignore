@@ -205,6 +205,7 @@ cython_debug/
 # Project specific
 gemini.md
 logs/
+.scratch/
 
 # Marimo
 marimo/_static/

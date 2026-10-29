@@ -39,6 +39,7 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
                     "message": exc.message,
                     "data": exc.data,
                 },
+                headers=exc.headers,
             )
         except Exception as exc:
             logger.exception("unhandled exception: %s", exc)

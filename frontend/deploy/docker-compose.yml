@@ -1,0 +1,25 @@
+services:
+  web-admin:
+    build:
+      context: ..
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
+    ports:
+      - "7002:7002"
+    environment:
+      NODE_ENV: production
+      API_BASE_URL: http://backend:7001/api/v1
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_RELEASE: ${APP_VERSION:-dev}
+      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    # Build this image from ../../backend, or point to the registry tag used by
+    # the backend team. Database and Redis settings live in the backend's own
+    # compose file or platform configuration.
+    image: geo-backend:${APP_VERSION:-dev}
+    expose:
+      - "7001"

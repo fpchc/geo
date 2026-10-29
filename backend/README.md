@@ -1,6 +1,6 @@
 # Enterprise Backend
 
-企业生产级 FastAPI 后端骨架：Clean Architecture 分层、SQLAlchemy 2.0 全异步、Alembic 迁移、RBAC 鉴权、幂等中间件、全链路 Trace ID 与 JSON 结构化日志。
+企业生产级 FastAPI 后端骨架：Clean Architecture 分层、SQLAlchemy 2.0 全异步、Alembic 迁移、RBAC 鉴权、幂等中间件、全链路 Trace ID 与 JSON / 文本可配置日志。
 
 ## 技术栈
 
@@ -19,8 +19,10 @@ cp .env.example .env
 docker compose up -d redis mysql
 alembic revision --autogenerate -m "init"
 alembic upgrade head
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 7001
 ```
+
+后端端口由 `.env` 的 `APP_PORT` 控制（默认 `7001`），容器启动同样读取该变量。
 
 一键容器化：`docker compose up --build`
 
@@ -33,6 +35,15 @@ uvicorn app.main:app --reload
 | Service | `app/services/` | 业务逻辑 |
 | Model | `app/models/` | ORM 与 DB 交互 |
 
-## 项目记忆
+## 项目文档
 
-`.ai/ARCHITECTURE.md` 与 `.ai/MODULE_MAP.md` 为跨会话记忆库，功能完成后经 `/update-memory` 维护。
+- 常驻规则：`AGENTS.md`（经 `CLAUDE.md` 的 `@AGENTS.md` 引入）
+- 目标架构：`docs/architecture/target.md`
+- 实现快照：`docs/architecture/implementation.md`
+- 模块索引：`docs/architecture/module-map.md`
+- 工程约束：`docs/constraints/README.md`
+- 领域词汇：`CONTEXT.md`
+- Specs / Tickets：`docs/specs/`、`docs/tickets/`
+- 架构决策：`docs/adr/`
+
+功能完成后按 `docs/constraints/update-memory.md` 维护实现快照与模块索引。

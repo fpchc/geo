@@ -9,7 +9,6 @@ from fastapi import APIRouter, Depends
 
 from app.api.dependencies.auth import require_permission
 from app.api.dependencies.services import get_review_service
-from app.core.idempotency import require_idempotency_key
 from app.schemas.content import ScoreOut
 from app.schemas.response import BizResponse
 from app.services.content.review_service import ReviewService

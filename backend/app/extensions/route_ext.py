@@ -1,4 +1,4 @@
-"""路由扩展：注册三端（admin / demand / supplier）API 路由。"""
+"""路由扩展：挂载 /api/v1 路由。"""
 
 from __future__ import annotations
 

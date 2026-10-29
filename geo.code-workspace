@@ -1,0 +1,26 @@
+{
+  // ===== discover 多根工作区 =====
+  // 在仓库根目录打开，同时开发后端(FastAPI/Python)与前端(Nuxt4/Vue3)。
+  // 每个子文件夹自带的 .vscode/ 配置(settings/tasks/launch/extensions)都会生效。
+  // 打开方式:  `code discover.code-workspace`  (或 VSCode -> File -> Open Workspace from File)
+  "folders": [
+    {
+      "name": "geo",
+      "path": "."
+    },
+    {
+      "name": "backend",
+      "path": "backend"
+    },
+    {
+      "name": "frontend",
+      "path": "frontend"
+    }
+  ],
+  "settings": {
+    "i18n-ally.localesPaths": [
+      "frontend/src/i18n",
+      "frontend/src/messages"
+    ]
+  }
+}

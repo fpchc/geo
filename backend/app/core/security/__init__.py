@@ -2,6 +2,13 @@
 
 from __future__ import annotations
 
+from app.core.security.login_guard import (
+    LoginDecision,
+    LoginGuard,
+    LoginGuardConfig,
+    evaluate_lockout,
+    evaluate_rate_limit,
+)
 from app.core.security.password import hash_password, verify_password
 from app.core.security.permission_cache import (
     collect_permission_codes,
@@ -19,12 +26,17 @@ from app.core.security.security import (
 )
 
 __all__ = [
+    "LoginDecision",
+    "LoginGuard",
+    "LoginGuardConfig",
     "audit_permission_codes",
     "collect_permission_codes",
     "create_access_token",
     "create_refresh_token",
     "declared_permission_codes",
     "decode_token",
+    "evaluate_lockout",
+    "evaluate_rate_limit",
     "hash_password",
     "invalidate_menus",
     "invalidate_role",

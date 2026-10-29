@@ -1,7 +1,15 @@
 node_modules
+.next
 .git
 .gitignore
-*.md
-# dist
-.turbo
-# dist.zip
+.env
+.env.*
+!.env.example
+coverage
+playwright-report
+test-results
+docs
+tests
+tsconfig.tsbuildinfo
+*.log
+README.md
